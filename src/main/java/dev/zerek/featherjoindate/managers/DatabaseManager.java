@@ -3,7 +3,6 @@ package dev.zerek.featherjoindate.managers;
 import dev.zerek.featherjoindate.FeatherJoinDate;
 import dev.zerek.featherjoindate.configs.JoinDateConfig;
 
-import java.io.File;
 import java.sql.*;
 
 public class DatabaseManager {
@@ -11,12 +10,10 @@ public class DatabaseManager {
     private static Connection connection;
     private final FeatherJoinDate plugin;
     private final JoinDateConfig joinDateConfig;
-    private final boolean isMySQLEnabled;
 
     public DatabaseManager(FeatherJoinDate plugin) {
         this.plugin = plugin;
         this.joinDateConfig = plugin.getJoinDateConfig();
-        this.isMySQLEnabled = this.joinDateConfig.isMysqlEnabled();
         this.initMySQLConnection();
         if (connection != null) {
             this.initTables();

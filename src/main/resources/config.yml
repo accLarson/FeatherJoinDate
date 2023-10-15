@@ -1,6 +1,5 @@
 settings:
   mysql:
-    enabled: false
     host: 'localhost'
     port: 3306
     username: ''

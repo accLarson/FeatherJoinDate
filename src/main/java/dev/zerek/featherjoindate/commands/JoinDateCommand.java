@@ -1,6 +1,7 @@
 package dev.zerek.featherjoindate.commands;
 
 import dev.zerek.featherjoindate.FeatherJoinDate;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -23,12 +24,43 @@ public class JoinDateCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player)) {
-            //add arg count logic... if 0 args, self. if 1 arg + permission, others.
-            DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("EEEE, MMM dd, uuuu").withZone(ZoneId.of("America/Toronto"));
-            String joinDate = formatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getJoinDate((OfflinePlayer) sender)));
-            sender.sendMessage(plugin.getJoinDateMessages().get("joindate-self", Map.of("joindate", joinDate)));
+
+        switch (args.length) {
+            case 0:
+                if (!sender.hasPermission("feather.joindate")) {
+                    sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission", null));
+                    return true;
+                }
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(plugin.getJoinDateMessages().get("error-not-player", null));
+                    return true;
+                }
+                // Checks passed.
+                sender.sendMessage(this.formatJoinDateMessage((OfflinePlayer) sender));
+                return true;
+
+            case 1:
+                if (!sender.hasPermission("feather.joindate.others")) {
+                    sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission", null));
+                    return true;
+                }
+                OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(args[0]);
+                if (!plugin.getJoinManager().isPlayerStored(offlinePlayer)) {
+                    sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player", null));
+                    return true;
+                }
+                // Checks passed.
+                sender.sendMessage(this.formatJoinDateMessage(offlinePlayer));
+
+            default:
+                sender.sendMessage(plugin.getJoinDateMessages().get("error-arg-count", null));
+                return true;
         }
-        return true;
+    }
+
+    private TextComponent formatJoinDateMessage(OfflinePlayer offlinePlayer) {
+        DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("EEEE, MMM dd, uuuu").withZone(ZoneId.of("America/Toronto"));
+        String joinDate = formatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getJoinDate((offlinePlayer))));
+        return plugin.getJoinDateMessages().get("joindate-self", Map.of("joindate", joinDate));
     }
 }

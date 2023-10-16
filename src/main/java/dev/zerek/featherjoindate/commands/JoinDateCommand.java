@@ -36,7 +36,7 @@ public class JoinDateCommand implements CommandExecutor {
                     return true;
                 }
                 // Checks passed.
-                sender.sendMessage(this.formatJoinDateMessage((OfflinePlayer) sender));
+                sender.sendMessage(this.formatJoinDateMessage((OfflinePlayer) sender,true));
                 return true;
 
             case 1:
@@ -50,7 +50,7 @@ public class JoinDateCommand implements CommandExecutor {
                     return true;
                 }
                 // Checks passed.
-                sender.sendMessage(this.formatJoinDateMessage(offlinePlayer));
+                sender.sendMessage(this.formatJoinDateMessage(offlinePlayer, false));
 
             default:
                 sender.sendMessage(plugin.getJoinDateMessages().get("error-arg-count", null));
@@ -58,9 +58,10 @@ public class JoinDateCommand implements CommandExecutor {
         }
     }
 
-    private TextComponent formatJoinDateMessage(OfflinePlayer offlinePlayer) {
+    private TextComponent formatJoinDateMessage(OfflinePlayer offlinePlayer, boolean self) {
         DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("EEEE, MMM dd, uuuu").withZone(ZoneId.of("America/Toronto"));
         String joinDate = formatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getJoinDate((offlinePlayer))));
-        return plugin.getJoinDateMessages().get("joindate-self", Map.of("joindate", joinDate));
+        if (self) return plugin.getJoinDateMessages().get("joindate-self", Map.of("joindate", joinDate));
+        else return plugin.getJoinDateMessages().get("joindate-other", Map.of("joindate", joinDate, "player", offlinePlayer.getName()));
     }
 }

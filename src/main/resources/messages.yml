@@ -1,2 +1,7 @@
-joindate-self: "<#b98863> Your first join was on <#e2b492><joindate><#b98863>."
+joindate-self: "<#b98863> You joined for the first time on on <#e2b492><joindate><#b98863>."
 joindate-other: "<#e2b492><player> <#b98863> joined for the first time on <#e2b492><joindate><#b98863>."
+
+error-no-permission: "<#e2b492>Error <#b98863>- You do not have permission to run this command."
+error-not-player: "<#e2b492>Error <#b98863>- You must run this command as a player to view your join date."
+error-unseen-player: "<#e2b492>Error <#b98863>- That player has never joined."
+error-arg-count: "<#e2b492>Error <#b98863>- Invalid amount of arguments."

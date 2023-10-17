@@ -4,3 +4,6 @@ main: dev.zerek.featherjoindate.FeatherJoinDate
 api-version: 1.20
 authors: [ Zerek ]
 description: Stores player first join date  - not reset with seasons.
+commands:
+  joindate:
+    description: View firstjoin dates.

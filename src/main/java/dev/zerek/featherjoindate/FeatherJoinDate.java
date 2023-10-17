@@ -1,5 +1,6 @@
 package dev.zerek.featherjoindate;
 
+import dev.zerek.featherjoindate.commands.JoinDateCommand;
 import dev.zerek.featherjoindate.configs.JoinDateConfig;
 import dev.zerek.featherjoindate.configs.JoinDateMessages;
 import dev.zerek.featherjoindate.managers.DatabaseManager;
@@ -20,6 +21,7 @@ public final class FeatherJoinDate extends JavaPlugin {
         this.joinDateMessages = new JoinDateMessages(this);
         this.databaseManager = new DatabaseManager(this);
         this.joinManager = new JoinManager(this);
+        this.getCommand("joindate").setExecutor(new JoinDateCommand(this));
     }
 
     @Override

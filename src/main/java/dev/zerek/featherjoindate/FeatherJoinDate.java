@@ -3,6 +3,7 @@ package dev.zerek.featherjoindate;
 import dev.zerek.featherjoindate.commands.JoinDateCommand;
 import dev.zerek.featherjoindate.configs.JoinDateConfig;
 import dev.zerek.featherjoindate.configs.JoinDateMessages;
+import dev.zerek.featherjoindate.listeners.PlayerJoinListener;
 import dev.zerek.featherjoindate.managers.DatabaseManager;
 import dev.zerek.featherjoindate.managers.JoinManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,6 +22,7 @@ public final class FeatherJoinDate extends JavaPlugin {
         this.joinDateMessages = new JoinDateMessages(this);
         this.databaseManager = new DatabaseManager(this);
         this.joinManager = new JoinManager(this);
+        this.getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         this.getCommand("joindate").setExecutor(new JoinDateCommand(this));
     }
 

@@ -74,7 +74,7 @@ public class DatabaseManager {
             plugin.getLogger().info("Creating JOINS table.");
             String query = "CREATE TABLE IF NOT EXISTS `JOINS` ("
                     + " `mojang_uuid` VARCHAR(255) PRIMARY KEY, "
-                    + " `joindate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ";
+                    + " `joindate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)";
             try {
                 if (!connection.isClosed()) {
                     connection.createStatement().execute(query);

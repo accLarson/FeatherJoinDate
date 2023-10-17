@@ -39,8 +39,6 @@ public class DatabaseManager {
             plugin.getLogger().severe("Unable to initialize connection.");
             plugin.getLogger().severe("Ensure connection can be made with provided config.yml MySQL strings.");
             plugin.getLogger().severe("Connection URL: " + url);
-            plugin.getLogger().severe("Disabling FeatherJoinDate.");
-            plugin.getServer().getPluginManager().disablePlugin(plugin);
         }
 
     }
@@ -76,7 +74,7 @@ public class DatabaseManager {
             plugin.getLogger().info("Creating JOINS table.");
             String query = "CREATE TABLE IF NOT EXISTS `JOINS` ("
                     + " `mojang_uuid` VARCHAR(255) PRIMARY KEY, "
-                    + " `joindate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ";
+                    + " `joindate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ";
             try {
                 if (!connection.isClosed()) {
                     connection.createStatement().execute(query);

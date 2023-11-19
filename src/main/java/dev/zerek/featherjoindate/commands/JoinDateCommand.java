@@ -31,11 +31,11 @@ public class JoinDateCommand implements CommandExecutor {
         switch (args.length) {
             case 0:
                 if (!sender.hasPermission("feather.joindate")) {
-                    sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission", null));
+                    sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission"));
                     return true;
                 }
                 if (!(sender instanceof Player)) {
-                    sender.sendMessage(plugin.getJoinDateMessages().get("error-not-player", null));
+                    sender.sendMessage(plugin.getJoinDateMessages().get("error-not-player"));
                     return true;
                 }
                 // Checks passed.
@@ -44,19 +44,19 @@ public class JoinDateCommand implements CommandExecutor {
 
             case 1:
                 if (!sender.hasPermission("feather.joindate.others")) {
-                    sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission", null));
+                    sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission"));
                     return true;
                 }
                 OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(args[0]);
                 if (!plugin.getJoinManager().isPlayerStored(offlinePlayer)) {
-                    sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player", null));
+                    sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player"));
                     return true;
                 }
                 // Checks passed.
                 sender.sendMessage(this.formatJoinDateMessage(offlinePlayer, false));
 
             default:
-                sender.sendMessage(plugin.getJoinDateMessages().get("error-arg-count", null));
+                sender.sendMessage(plugin.getJoinDateMessages().get("error-arg-count"));
                 return true;
         }
     }
@@ -98,7 +98,7 @@ public class JoinDateCommand implements CommandExecutor {
             return plugin.getJoinDateMessages().get("joindate-other-offline", Map.of(
                     "joindate", joinDate,
                     "jointime", joinTime,
-                    "lastlogindate", lastLoginDate,
+                    "lastlogin date", lastLoginDate,
                     "lastlogintime", lastLoginTime,
                     "player", offlinePlayer.getName(),
                     "usernames", usernames

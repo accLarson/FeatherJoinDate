@@ -1,19 +1,19 @@
-joindate-self: "<#b98863>You joined for the first time on <#e2b492><joindate> <#b98863>at <#e2b492><jointime><#b98863>.
-                <br><#b98863>You last logged in on <#e2b492><lastlogindate> <#b98863>at <#e2b492><lastlogintime><#b98863>.
-                <br><#b98863>You've been online for <#e2b492><timeonline><#b98863>.
-                <br><#b98863>Username(s): <#e2b492><usernames>"
+joindate-self: "<#656b96>You joined for the first time on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#656b96>You last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+                <br><#656b96>You've been online for <#949bd1><timeonline><#656b96>.
+                <br><#656b96>Username(s): <#949bd1><usernames>"
 
-joindate-other: "<#e2b492><player> <#b98863>joined for the first time on <#e2b492><joindate> <#b98863>at <#e2b492><jointime><#b98863>.
-                <br><#e2b492><player> <#b98863>last logged in on <#e2b492><lastlogindate> <#b98863>at <#e2b492><lastlogintime><#b98863>.
-                <br><#e2b492><player> <#b98863>has been online for <#e2b492><timeonline><#b98863>.
-                <br><#b98863>Username(s): <#e2b492><usernames>"
+joindate-other: "<#949bd1><player> <#656b96>joined for the first time on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#949bd1><player> <#656b96>last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+                <br><#949bd1><player> <#656b96>has been online for <#949bd1><timeonline><#656b96>.
+                <br><#656b96>Username(s): <#949bd1><usernames>"
 
-joindate-offline: "<#e2b492><player> <#b98863>joined for the first time on <#e2b492><joindate> <#b98863>at <#e2b492><jointime><#b98863>.
-                <br><#e2b492><player> <#b98863>last logged in on <#e2b492><lastlogindate> <#b98863>at <#e2b492><lastlogintime><#b98863>.
-                <br><#b98863>Username(s): <#e2b492><usernames>"
+joindate-offline: "<#949bd1><player> <#656b96>joined for the first time on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#949bd1><player> <#656b96>last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+                <br><#656b96>Username(s): <#949bd1><usernames>"
 
 
-error-no-permission: "<#e2b492>Error <#b98863>- You do not have permission to run this command."
-error-not-player: "<#e2b492>Error <#b98863>- You must run this command as a player to view your join date."
-error-unseen-player: "<#e2b492>Error <#b98863>- That player has never joined."
-error-arg-count: "<#e2b492>Error <#b98863>- Invalid amount of arguments."
+error-no-permission: "<#949bd1>Error <#656b96>- You do not have permission to run this command."
+error-not-player: "<#949bd1>Error <#656b96>- You must run this command as a player to view your join date."
+error-unseen-player: "<#949bd1>Error <#656b96>- That player has never joined."
+error-arg-count: "<#949bd1>Error <#656b96>- Invalid amount of arguments."

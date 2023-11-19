@@ -23,7 +23,8 @@ public class JoinManager {
     }
 
     public boolean isUsernameStored (OfflinePlayer offlinePlayer){
-        return Username.exists(Username.where("mojang_uuid = ? and username = ?", offlinePlayer.getUniqueId().toString(),offlinePlayer.getName()));
+        Username usernameRecord = Username.findFirst("mojang_uuid = ? and username = ?", offlinePlayer.getUniqueId().toString(),offlinePlayer.getName());
+        return usernameRecord != null;
     }
 
     public void storeJoin(OfflinePlayer offlinePlayer) {

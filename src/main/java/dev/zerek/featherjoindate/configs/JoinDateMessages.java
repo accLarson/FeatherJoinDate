@@ -24,6 +24,7 @@ public class JoinDateMessages {
             TagResolver.builder()
                     .resolver(StandardTags.color())
                     .resolver(StandardTags.reset())
+                    .resolver(StandardTags.newline())
                     .build()
     ).build();
 
@@ -58,5 +59,4 @@ public class JoinDateMessages {
 
         } else return Component.text("");
     }
-
 }

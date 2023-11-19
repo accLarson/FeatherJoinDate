@@ -56,7 +56,7 @@ public class DatabaseManager {
         }
 
         String query2 = "CREATE TABLE IF NOT EXISTS `usernames` ("
-                + " 'id'            AUTO-INCREMENT PRIMARY KEY, "
+                + " 'id'            INT AUTO-INCREMENT PRIMARY KEY, "
                 + " `mojang_uuid`   VARCHAR(64), "
                 + " `username`      VARCHAR(32), "
                 + " FOREIGN KEY (mojang_uuid) REFERENCES joins(mojang_uuid))";

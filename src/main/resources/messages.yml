@@ -1,15 +1,15 @@
 joindate-self: "<#b98863>You joined for the first time on <#e2b492><joindate> <#b98863>at <#e2b492><jointime><#b98863>.
-                <br><#b98863>You last logged in on <#e2b492><lastjoindate> <#b98863>at <#e2b492><lastjointime><#b98863>.
+                <br><#b98863>You last logged in on <#e2b492><lastlogindate> <#b98863>at <#e2b492><lastlogintime><#b98863>.
                 <br><#b98863>You've been online for <#e2b492><timeonline><#b98863>.
                 <br><#b98863>Username(s): <#e2b492><usernames>"
 
 joindate-other: "<#e2b492><player> <#b98863>joined for the first time on <#e2b492><joindate> <#b98863>at <#e2b492><jointime><#b98863>.
-                <br><#e2b492><player> <#b98863>last logged in on <#e2b492><lastjoindate> <#b98863>at <#e2b492><lastjointime><#b98863>.
+                <br><#e2b492><player> <#b98863>last logged in on <#e2b492><lastlogindate> <#b98863>at <#e2b492><lastlogintime><#b98863>.
                 <br><#e2b492><player> <#b98863>has been online for <#e2b492><timeonline><#b98863>.
                 <br><#b98863>Username(s): <#e2b492><usernames>"
 
 joindate-offline: "<#e2b492><player> <#b98863>joined for the first time on <#e2b492><joindate> <#b98863>at <#e2b492><jointime><#b98863>.
-                <br><#e2b492><player> <#b98863>last logged in on <#e2b492><lastjoindate> <#b98863>at <#e2b492><lastjointime><#b98863>.
+                <br><#e2b492><player> <#b98863>last logged in on <#e2b492><lastlogindate> <#b98863>at <#e2b492><lastlogintime><#b98863>.
                 <br><#b98863>Username(s): <#e2b492><usernames>"
 
 

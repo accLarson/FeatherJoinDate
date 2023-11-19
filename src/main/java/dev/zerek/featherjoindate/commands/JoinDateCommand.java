@@ -81,7 +81,7 @@ public class JoinDateCommand implements CommandExecutor {
                     "joindate", joinDate,
                     "jointime", joinTime,
                     "lastlogindate", lastLoginDate,
-                    "lastLoginTime", lastLoginTime,
+                    "lastlogintime", lastLoginTime,
                     "timeonline", timeOnline,
                     "usernames", usernames
             ));
@@ -89,7 +89,7 @@ public class JoinDateCommand implements CommandExecutor {
                     "joindate", joinDate,
                     "jointime", joinTime,
                     "lastlogindate", lastLoginDate,
-                    "lastLoginTime", lastLoginTime,
+                    "lastlogintime", lastLoginTime,
                     "timeonline", timeOnline,
                     "player", offlinePlayer.getName(),
                     "usernames", usernames
@@ -99,7 +99,7 @@ public class JoinDateCommand implements CommandExecutor {
                     "joindate", joinDate,
                     "jointime", joinTime,
                     "lastlogindate", lastLoginDate,
-                    "lastLoginTime", lastLoginTime,
+                    "lastlogintime", lastLoginTime,
                     "player", offlinePlayer.getName(),
                     "usernames", usernames
             ));

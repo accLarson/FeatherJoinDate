@@ -5,6 +5,8 @@ import dev.zerek.featherjoindate.data.Join;
 import dev.zerek.featherjoindate.data.Username;
 import org.bukkit.OfflinePlayer;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,10 +37,11 @@ public class JoinManager {
                 plugin.getLogger().severe("Error inserting " + offlinePlayer.getName() + " into joins database: " + e.getMessage());
             }
         } else {
-            // Player exists in the database, update the 'updated_at' column
+            // Player exists in the database, update the 'last_login' column
             Join join = Join.findById(uuid);
             if (join != null) {
                 try {
+                    join.set("last_login", Timestamp.from(Instant.now()));
                     join.saveIt();
                 } catch (Exception e) {
                     plugin.getLogger().severe("Error updating " + offlinePlayer.getName() + " latest join in database: " + e.getMessage());
@@ -53,6 +56,7 @@ public class JoinManager {
                 Username username = new Username();
                 username.set("mojang_uuid", offlinePlayer.getUniqueId().toString());
                 username.set("username", offlinePlayer.getName());
+                username.insert();
             } catch (Exception e) {
                 plugin.getLogger().severe("Error inserting " + offlinePlayer.getName() + " into username database: " + e.getMessage());
             }
@@ -62,7 +66,6 @@ public class JoinManager {
 
 
     public long getJoinDate (OfflinePlayer offlinePlayer){
-
         if (isPlayerStored(offlinePlayer)) {
             Join join = Join.findById(offlinePlayer.getUniqueId().toString());
             return join.getLong("joindate");
@@ -73,7 +76,7 @@ public class JoinManager {
     public long getLastLogin(OfflinePlayer offlinePlayer) {
         if (isPlayerStored(offlinePlayer)) {
             Join join = Join.findById(offlinePlayer.getUniqueId().toString());
-            return join.getLong("updated_at");
+            return join.getLong("last_login");
         }
         else return 0;
     }

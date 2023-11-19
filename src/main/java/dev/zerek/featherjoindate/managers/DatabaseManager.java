@@ -2,12 +2,10 @@ package dev.zerek.featherjoindate.managers;
 
 import dev.zerek.featherjoindate.FeatherJoinDate;
 import dev.zerek.featherjoindate.configs.JoinDateConfig;
-
-import java.sql.*;
+import org.javalite.activejdbc.Base;
 
 public class DatabaseManager {
 
-    private static Connection connection;
     private final FeatherJoinDate plugin;
     private final JoinDateConfig joinDateConfig;
 
@@ -15,102 +13,68 @@ public class DatabaseManager {
         this.plugin = plugin;
         this.joinDateConfig = plugin.getJoinDateConfig();
         this.initMySQLConnection();
-        if (connection != null) {
-            this.initTables();
-        }
+        this.initTables();
     }
 
-    private void initMySQLConnection(){
+    private void initMySQLConnection() {
         JoinDateConfig config = this.plugin.getJoinDateConfig();
 
         String host = config.getMysqlHost();
         int port = config.getMysqlPort();
         String database = config.getMysqlDatabase();
-
         String url = String.format("jdbc:mysql://%s:%d/%s", host, port, database);
-
         String username = config.getMysqlUsername();
         String password = config.getMysqlPassword();
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            DatabaseManager.connection = DriverManager.getConnection(url, username, password);
-        } catch (SQLException | ClassNotFoundException exception) {
+            if (!Base.hasConnection()) {
+                Base.open("com.mysql.cj.jdbc.Driver", url, username, password);
+            }
+        } catch (Exception exception) {
             plugin.getLogger().severe("Unable to initialize connection.");
             plugin.getLogger().severe("Ensure connection can be made with provided config.yml MySQL strings.");
             plugin.getLogger().severe("Connection URL: " + url);
         }
-
     }
 
     public void close() {
-        try {
-            if (DatabaseManager.connection != null) {
-                if (!DatabaseManager.connection.isClosed()){
-                    DatabaseManager.connection.close();
-                }
-            }
-        } catch (SQLException exception) {
-            plugin.getLogger().severe("Unable to close connection.");
-        }
-    }
-
-    private boolean existsTable(String table) {
-        try {
-            if (!connection.isClosed()) {
-                ResultSet rs = connection.getMetaData().getTables(null, null, table, null);
-                return rs.next();
-            } else {
-                return false;
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().severe("Unable to query table metadata.");
-            return false;
+        if (Base.hasConnection()) {
+            Base.close();
         }
     }
 
     private void initTables() {
-        if (!this.existsTable("JOINS")) {
-            plugin.getLogger().info("Creating JOINS table.");
-            String query = "CREATE TABLE IF NOT EXISTS `JOINS` ("
-                    + " `mojang_uuid` VARCHAR(255) PRIMARY KEY, "
-                    + " `joindate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)";
-            try {
-                if (!connection.isClosed()) {
-                    connection.createStatement().execute(query);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                plugin.getLogger().severe("Unable to create JOINS table.");
-            }
+        plugin.getLogger().info("Ensuring joins table exists.");
+        String query = "CREATE TABLE IF NOT EXISTS `joins` ("
+                + " `mojang_uuid`   VARCHAR(64) PRIMARY KEY, "
+                + " `updated_at`    DATETIME, "
+                + " `joindate`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)";
+        try {
+            Base.exec(query);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Unable to ensure joins table exists.");
+        }
+
+        String query2 = "CREATE TABLE IF NOT EXISTS `usernames` ("
+                + " 'id'            AUTO-INCREMENT PRIMARY KEY, "
+                + " `mojang_uuid`   VARCHAR(64), "
+                + " `username`      VARCHAR(32), "
+                + " FOREIGN KEY (mojang_uuid) REFERENCES joins(mojang_uuid))";
+        try {
+            Base.exec(query2);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Unable to ensure usernames table exists.");
         }
     }
 
+    // Use ActiveJDBC to execute updates and queries
     public boolean executeUpdate(String update) {
-        if (DatabaseManager.connection == null) {
-            return false;
-        }
-        Statement statement;
         try {
-            statement = DatabaseManager.connection.createStatement();
-            statement.executeUpdate(update);
-            statement.close();
+            Base.exec(update);
             return true;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             plugin.getLogger().severe("Failed to execute update: ||| " + update + " |||");
             return false;
-        }
-    }
-
-    public ResultSet executeQuery(String query) {
-        if (DatabaseManager.connection == null) {
-            return null;
-        }
-        try {
-            return DatabaseManager.connection.createStatement().executeQuery(query);
-        } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to execute query: ||| " + query + " |||");
-            return null;
         }
     }
 }

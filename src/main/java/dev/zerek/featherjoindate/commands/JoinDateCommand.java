@@ -1,6 +1,7 @@
 package dev.zerek.featherjoindate.commands;
 
 import dev.zerek.featherjoindate.FeatherJoinDate;
+import dev.zerek.featherjoindate.managers.JoinManager;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -9,10 +10,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class JoinDateCommand implements CommandExecutor {
 
@@ -59,9 +62,54 @@ public class JoinDateCommand implements CommandExecutor {
     }
 
     private TextComponent formatJoinDateMessage(OfflinePlayer offlinePlayer, boolean self) {
-        DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("EEEE, MMM dd, uuuu").withZone(ZoneId.of("America/Toronto"));
-        String joinDate = formatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getJoinDate((offlinePlayer))));
-        if (self) return plugin.getJoinDateMessages().get("joindate-self", Map.of("joindate", joinDate));
-        else return plugin.getJoinDateMessages().get("joindate-other", Map.of("joindate", joinDate, "player", offlinePlayer.getName()));
+        DateTimeFormatter dateFormatter  = DateTimeFormatter.ofPattern("MMM dd, uuuu").withZone(ZoneId.of("America/Toronto"));
+        DateTimeFormatter timeFormatter  = DateTimeFormatter.ofPattern("hh:mm a").withZone(ZoneId.of("America/Toronto"));
+
+        String joinDate = dateFormatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getJoinDate((offlinePlayer))));
+        String joinTime = timeFormatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getJoinDate((offlinePlayer))));
+
+        String lastLoginDate = dateFormatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getLastLogin(offlinePlayer)));
+        String lastLoginTime = timeFormatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getLastLogin(offlinePlayer)));
+
+        String usernames = String.join(", ", plugin.getJoinManager().getUsernames(offlinePlayer));
+
+        if (offlinePlayer.isOnline()) {
+            Duration duration = Duration.between(Instant.ofEpochMilli(plugin.getJoinManager().getLastLogin(offlinePlayer)), Instant.now());
+            String timeOnline = formatDuration(duration);
+
+            if (self) return plugin.getJoinDateMessages().get("joindate-self", Map.of(
+                    "joindate", joinDate,
+                    "jointime", joinTime,
+                    "lastlogindate", lastLoginDate,
+                    "lastLoginTime", lastLoginTime,
+                    "timeonline", timeOnline,
+                    "usernames", usernames
+            ));
+            else return plugin.getJoinDateMessages().get("joindate-other", Map.of(
+                    "joindate", joinDate,
+                    "jointime", joinTime,
+                    "lastlogindate", lastLoginDate,
+                    "lastLoginTime", lastLoginTime,
+                    "timeonline", timeOnline,
+                    "player", offlinePlayer.getName(),
+                    "usernames", usernames
+            ));
+        } else {
+            return plugin.getJoinDateMessages().get("joindate-other-offline", Map.of(
+                    "joindate", joinDate,
+                    "jointime", joinTime,
+                    "lastlogindate", lastLoginDate,
+                    "lastLoginTime", lastLoginTime,
+                    "player", offlinePlayer.getName(),
+                    "usernames", usernames
+            ));
+
+        }
+    }
+
+    private static String formatDuration(Duration duration) {
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes() - (hours * 60);
+        return String.format("%d hours, %d minutes", hours, minutes);
     }
 }

@@ -53,10 +53,11 @@ public class DatabaseManager {
             Base.exec(query);
         } catch (Exception e) {
             plugin.getLogger().severe("Unable to ensure joins table exists.");
+            plugin.getLogger().warning(e.getMessage());
         }
 
         String query2 = "CREATE TABLE IF NOT EXISTS `usernames` ("
-                + " 'id'            INT AUTO-INCREMENT PRIMARY KEY, "
+                + " `id`            INT AUTO_INCREMENT PRIMARY KEY, "
                 + " `mojang_uuid`   VARCHAR(64), "
                 + " `username`      VARCHAR(32), "
                 + " FOREIGN KEY (mojang_uuid) REFERENCES joins(mojang_uuid))";
@@ -64,6 +65,7 @@ public class DatabaseManager {
             Base.exec(query2);
         } catch (Exception e) {
             plugin.getLogger().severe("Unable to ensure usernames table exists.");
+            plugin.getLogger().warning(e.getMessage());
         }
     }
 

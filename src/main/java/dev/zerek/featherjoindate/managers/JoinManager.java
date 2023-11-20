@@ -83,7 +83,7 @@ public class JoinManager {
     }
 
     public List<String> getUsernames(OfflinePlayer offlinePlayer) {
-        List<Username> offlinePlayerUsernames = Username.where("mojang_uuid = ? and username = ?", offlinePlayer.getUniqueId().toString(), offlinePlayer.getName());
+        List<Username> offlinePlayerUsernames = Username.where("mojang_uuid = ?", offlinePlayer.getUniqueId().toString());
         return offlinePlayerUsernames.stream().map(u -> u.getString("username")).collect(Collectors.toList());
     }
 

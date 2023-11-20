@@ -99,7 +99,7 @@ public class SeenCommand implements CommandExecutor {
             return plugin.getJoinDateMessages().get("joindate-offline", Map.of(
                     "joindate", joinDate,
                     "jointime", joinTime,
-                    "lastlogin date", lastLoginDate,
+                    "lastlogindate", lastLoginDate,
                     "lastlogintime", lastLoginTime,
                     "player", offlinePlayer.getName(),
                     "usernames", usernames

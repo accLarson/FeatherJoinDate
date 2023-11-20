@@ -23,7 +23,7 @@ public final class FeatherJoinDate extends JavaPlugin {
         this.databaseManager = new DatabaseManager(this);
         this.joinManager = new JoinManager(this);
         this.getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
-        this.getCommand("joindate").setExecutor(new SeenCommand(this));
+        this.getCommand("seen").setExecutor(new SeenCommand(this));
     }
 
     @Override

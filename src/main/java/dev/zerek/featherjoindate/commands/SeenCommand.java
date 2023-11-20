@@ -1,7 +1,6 @@
 package dev.zerek.featherjoindate.commands;
 
 import dev.zerek.featherjoindate.FeatherJoinDate;
-import dev.zerek.featherjoindate.managers.JoinManager;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -15,13 +14,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public class JoinDateCommand implements CommandExecutor {
+public class SeenCommand implements CommandExecutor {
 
     private final FeatherJoinDate plugin;
 
-    public JoinDateCommand(FeatherJoinDate plugin) {
+    public SeenCommand(FeatherJoinDate plugin) {
         this.plugin = plugin;
     }
 
@@ -30,7 +28,7 @@ public class JoinDateCommand implements CommandExecutor {
 
         switch (args.length) {
             case 0:
-                if (!sender.hasPermission("feather.joindate")) {
+                if (!sender.hasPermission("feather.seen")) {
                     sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission"));
                     return true;
                 }
@@ -43,17 +41,20 @@ public class JoinDateCommand implements CommandExecutor {
                 return true;
 
             case 1:
-                if (!sender.hasPermission("feather.joindate.others")) {
+                if (!sender.hasPermission("feather.seen.others")) {
                     sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission"));
                     return true;
                 }
                 OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(args[0]);
                 if (!plugin.getJoinManager().isPlayerStored(offlinePlayer)) {
-                    sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player"));
+                    sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player",Map.of(
+                            "player", args[0]
+                    )));
                     return true;
                 }
                 // Checks passed.
                 sender.sendMessage(this.formatJoinDateMessage(offlinePlayer, false));
+                return true;
 
             default:
                 sender.sendMessage(plugin.getJoinDateMessages().get("error-arg-count"));
@@ -95,7 +96,7 @@ public class JoinDateCommand implements CommandExecutor {
                     "usernames", usernames
             ));
         } else {
-            return plugin.getJoinDateMessages().get("joindate-other-offline", Map.of(
+            return plugin.getJoinDateMessages().get("joindate-offline", Map.of(
                     "joindate", joinDate,
                     "jointime", joinTime,
                     "lastlogin date", lastLoginDate,

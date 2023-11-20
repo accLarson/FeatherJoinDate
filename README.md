@@ -8,6 +8,6 @@ Requires MySQL/MariaDB database to store first join data.
 
 ### Permission Nodes:
 
-    feather.joindate           -  /joindate             -  View the date you first joined.
-    feather.joindate.others    -  /joindate <player>    -  View the date another player first joined.
+    feather.seen           -  /joindate             -  View the date you first joined.
+    feather.seen.others    -  /joindate <player>    -  View the date another player first joined.
     

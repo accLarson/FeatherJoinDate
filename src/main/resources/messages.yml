@@ -15,5 +15,5 @@ joindate-offline: "<#949bd1><player> <#656b96>joined for the first time on <#949
 
 error-no-permission: "<#949bd1>Error <#656b96>- You do not have permission to run this command."
 error-not-player: "<#949bd1>Error <#656b96>- You must run this command as a player to view your join date."
-error-unseen-player: "<#949bd1>Error <#656b96>- That player has never joined."
+error-unseen-player: "<#949bd1>Error <#656b96>- <#949bd1><player> <#656b96>has never joined feather64."
 error-arg-count: "<#949bd1>Error <#656b96>- Invalid amount of arguments."

@@ -15,6 +15,11 @@ joindate-offline: "<#949bd1><player> Join Statistics
                 <br><#656b96>Last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
                 <br><#656b96>Username(s): <#949bd1><usernames>"
 
+joindate-hidden: "<#949bd1><player> Join Statistics
+                <br><#656b96>First joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#656b96>Might be online vanished.
+                <br><#656b96>Username(s): <#949bd1><usernames>"
+
 
 error-no-permission: "<#949bd1>Error <#656b96>- You do not have permission to run this command."
 error-not-player: "<#949bd1>Error <#656b96>- You must run this command as a player to view your join date."

@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.MetadataValue;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -46,12 +47,14 @@ public class SeenCommand implements CommandExecutor {
                     return true;
                 }
                 OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(args[0]);
+
                 if (!plugin.getJoinManager().isPlayerStored(offlinePlayer)) {
                     sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player",Map.of(
                             "player", args[0]
                     )));
                     return true;
                 }
+
                 // Checks passed.
                 sender.sendMessage(this.formatJoinDateMessage(offlinePlayer, false));
                 return true;
@@ -78,23 +81,51 @@ public class SeenCommand implements CommandExecutor {
             Duration duration = Duration.between(Instant.ofEpochMilli(plugin.getJoinManager().getLastLogin(offlinePlayer)), Instant.now());
             String timeOnline = formatDuration(duration);
 
-            if (self) return plugin.getJoinDateMessages().get("joindate-self", Map.of(
-                    "joindate", joinDate,
-                    "jointime", joinTime,
-                    "lastlogindate", lastLoginDate,
-                    "lastlogintime", lastLoginTime,
-                    "timeonline", timeOnline,
-                    "usernames", usernames
-            ));
-            else return plugin.getJoinDateMessages().get("joindate-other", Map.of(
-                    "joindate", joinDate,
-                    "jointime", joinTime,
-                    "lastlogindate", lastLoginDate,
-                    "lastlogintime", lastLoginTime,
-                    "timeonline", timeOnline,
-                    "player", offlinePlayer.getName(),
-                    "usernames", usernames
-            ));
+            if (isVanished(offlinePlayer.getPlayer())) {
+                if (self) {
+                    return plugin.getJoinDateMessages().get("joindate-self", Map.of(
+                            "joindate", joinDate,
+                            "jointime", joinTime,
+                            "lastlogindate", lastLoginDate,
+                            "lastlogintime", lastLoginTime,
+                            "timeonline", timeOnline,
+                            "usernames", usernames
+                    ));
+                }
+                else {
+                    return plugin.getJoinDateMessages().get("joindate-hidden", Map.of(
+                            "joindate", joinDate,
+                            "jointime", joinTime,
+                            "player", offlinePlayer.getName(),
+                            "usernames", usernames
+                    ));
+                }
+
+            } else {
+                if (self) {
+                    return plugin.getJoinDateMessages().get("joindate-self", Map.of(
+                            "joindate", joinDate,
+                            "jointime", joinTime,
+                            "lastlogindate", lastLoginDate,
+                            "lastlogintime", lastLoginTime,
+                            "timeonline", timeOnline,
+                            "usernames", usernames
+                    ));
+                }
+                else {
+                    return plugin.getJoinDateMessages().get("joindate-other", Map.of(
+                            "joindate", joinDate,
+                            "jointime", joinTime,
+                            "lastlogindate", lastLoginDate,
+                            "lastlogintime", lastLoginTime,
+                            "timeonline", timeOnline,
+                            "player", offlinePlayer.getName(),
+                            "usernames", usernames
+                    ));
+                }
+
+            }
+
         } else {
             return plugin.getJoinDateMessages().get("joindate-offline", Map.of(
                     "joindate", joinDate,
@@ -104,7 +135,6 @@ public class SeenCommand implements CommandExecutor {
                     "player", offlinePlayer.getName(),
                     "usernames", usernames
             ));
-
         }
     }
 
@@ -112,5 +142,12 @@ public class SeenCommand implements CommandExecutor {
         long hours = duration.toHours();
         long minutes = duration.toMinutes() - (hours * 60);
         return String.format("%d hours, %d minutes", hours, minutes);
+    }
+
+    private boolean isVanished(Player player) {
+        for (MetadataValue meta : player.getMetadata("vanished")) {
+            if (meta.asBoolean()) return true;
+        }
+        return false;
     }
 }

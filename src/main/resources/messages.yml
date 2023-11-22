@@ -1,15 +1,18 @@
-joindate-self: "<#656b96>You joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
-                <br><#656b96>You last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
-                <br><#656b96>You've been online for <#949bd1><timeonline><#656b96>.
+joindate-self: "<#949bd1>Your Join Statistics
+                <br><#656b96>First joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#656b96>Last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+                <br><#656b96>Been online for <#949bd1><timeonline><#656b96>.
                 <br><#656b96>Username(s): <#949bd1><usernames>"
 
-joindate-other: "<#949bd1><player> <#656b96>joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
-                <br><#949bd1><player> <#656b96>last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
-                <br><#949bd1><player> <#656b96>has been online for <#949bd1><timeonline><#656b96>.
+joindate-other: "<#949bd1><player> Join Statistics
+                <br><#656b96>First joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#656b96>Last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+                <br><#656b96>Been online for <#949bd1><timeonline><#656b96>.
                 <br><#656b96>Username(s): <#949bd1><usernames>"
 
-joindate-offline: "<#949bd1><player> <#656b96>joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
-                <br><#949bd1><player> <#656b96>last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+joindate-offline: "<#949bd1><player> Join Statistics
+                <br><#656b96>First joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#656b96>Last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
                 <br><#656b96>Username(s): <#949bd1><usernames>"
 
 

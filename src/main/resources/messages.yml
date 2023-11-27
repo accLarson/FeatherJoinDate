@@ -1,27 +1,36 @@
-joindate-self: "<#949bd1>Your Join Statistics
-                <br><#656b96>First joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
-                <br><#656b96>Last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
-                <br><#656b96>Been online for <#949bd1><timeonline><#656b96>.
-                <br><#656b96>Username(s): <#949bd1><usernames>"
+joindate: "<white>•<#777777>--- <#ffffff>feather64 Join Statistics</#ffffff> --------------------------</#777777>•
+                <br><gray><player> Join Statistics
+                <br><#656b96>First joined: <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#656b96>Last logged: <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+                <br><#656b96>Online time: <#949bd1><timeonline><#656b96>.
+                <br><#656b96>Past Name(s): <#949bd1><usernames>
+                <br><white>•<#777777>----------------------------------------------------</#777777>•"
 
-joindate-other: "<#949bd1><player> Join Statistics
-                <br><#656b96>First joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
-                <br><#656b96>Last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
-                <br><#656b96>Been online for <#949bd1><timeonline><#656b96>.
-                <br><#656b96>Username(s): <#949bd1><usernames>"
+joindate-offline: "<white>•<#777777>--- <#ffffff>feather64 Join Statistics</#ffffff> --------------------------</#777777>•
+                <br><gray><player> Join Statistics
+                <br><#656b96>First joined: <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#656b96>Last logged: <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+                <br><#656b96>Past Name(s): <#949bd1><usernames>
+                <br><white>•<#777777>----------------------------------------------------</#777777>•"
 
-joindate-offline: "<#949bd1><player> Join Statistics
-                <br><#656b96>First joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
-                <br><#656b96>Last logged in on <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
-                <br><#656b96>Username(s): <#949bd1><usernames>"
+joindate-no-usernames: "<white>•<#777777>--- <#ffffff>feather64 Join Statistics</#ffffff> --------------------------</#777777>•
+                <br><gray><player> Join Statistics
+                <br><#656b96>First joined: <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#656b96>Last logged: <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+                <br><#656b96>Online time: <#949bd1><timeonline><#656b96>.
+                <br><white>•<#777777>----------------------------------------------------</#777777>•"
 
-joindate-hidden: "<#949bd1><player> Join Statistics
-                <br><#656b96>First joined F64 on <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
-                <br><#656b96>Might be online vanished.
-                <br><#656b96>Username(s): <#949bd1><usernames>"
+joindate-offline-no-usernames: "<white>•<#777777>--- <#ffffff>feather64 Join Statistics</#ffffff> --------------------------</#777777>•
+                <br><gray><player> Join Statistics
+                <br><#656b96>First joined: <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
+                <br><#656b96>Last logged: <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
+                <br><white>•<#777777>----------------------------------------------------</#777777>•"
 
-
-error-no-permission: "<#949bd1>Error <#656b96>- You do not have permission to run this command."
-error-not-player: "<#949bd1>Error <#656b96>- You must run this command as a player to view your join date."
-error-unseen-player: "<#949bd1>Error <#656b96>- <#949bd1><player> <#656b96>has never joined F64. Must be current username."
-error-arg-count: "<#949bd1>Error <#656b96>- Invalid amount of arguments."
+warning-old-username: "<#db8d8c>Warning <#c47372>- <#db8d8c><player> <#c47372>is an old username. Showing <#db8d8c><currentusername>."
+error-no-permission: "<#db8d8c>Error <#c47372>- You do not have permission to run this command."
+error-not-player: "<#db8d8c>Error <#c47372>- You must run this command as a player to view your join date."
+error-unseen-player: "<#db8d8c>Error <#c47372>- <#db8d8c><player> <#c47372>has never joined F64."
+error-unseen-player-multiple: "<#db8d8c>Error <#c47372>- <#c47372>No account currently has this username.
+                              <br><#c47372>Multiple users have previously had this name:
+                              <br><#db8d8c><usernames>."
+error-arg-count: "<#db8d8c>Error <#c47372>- Invalid amount of arguments."

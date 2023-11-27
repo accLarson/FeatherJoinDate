@@ -4,6 +4,8 @@ import dev.zerek.featherjoindate.FeatherJoinDate;
 import dev.zerek.featherjoindate.data.Join;
 import dev.zerek.featherjoindate.data.Username;
 import org.bukkit.OfflinePlayer;
+import org.javalite.activejdbc.LazyList;
+import org.javalite.activejdbc.Model;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -25,6 +27,13 @@ public class JoinManager {
     public boolean isUsernameStored (OfflinePlayer offlinePlayer){
         Username usernameRecord = Username.findFirst("mojang_uuid = ? and username = ?", offlinePlayer.getUniqueId().toString(),offlinePlayer.getName());
         return usernameRecord != null;
+    }
+
+    public List<String> getUsernameUUIDs (String username){
+        List<Username> usernameUUIDs = Username.find("username = ?", username);
+        return usernameUUIDs.stream()
+                .map(u -> u.getString("mojang_uuid"))
+                .collect(Collectors.toList());
     }
 
     public void storeJoin(OfflinePlayer offlinePlayer) {
@@ -82,9 +91,11 @@ public class JoinManager {
         else return 0;
     }
 
-    public List<String> getUsernames(OfflinePlayer offlinePlayer) {
+    public List<String> GetPreviousUsernames(OfflinePlayer offlinePlayer, String currentUsername) {
         List<Username> offlinePlayerUsernames = Username.where("mojang_uuid = ?", offlinePlayer.getUniqueId().toString());
-        return offlinePlayerUsernames.stream().map(u -> u.getString("username")).collect(Collectors.toList());
+        return offlinePlayerUsernames.stream()
+                .map(u -> u.getString("username"))
+                .filter(username -> !username.equals(currentUsername))
+                .collect(Collectors.toList());
     }
-
 }

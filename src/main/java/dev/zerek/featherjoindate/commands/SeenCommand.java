@@ -1,7 +1,12 @@
 package dev.zerek.featherjoindate.commands;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dev.zerek.featherjoindate.FeatherJoinDate;
 import net.kyori.adventure.text.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,15 +15,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.metadata.MetadataValue;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class SeenCommand implements CommandExecutor {
 
     private final FeatherJoinDate plugin;
+
+    private static final DateTimeFormatter dateFormatter  = DateTimeFormatter.ofPattern("MMM dd, uuuu").withZone(ZoneId.of("America/Toronto"));
+    private static final DateTimeFormatter timeFormatter  = DateTimeFormatter.ofPattern("hh:mm a").withZone(ZoneId.of("America/Toronto"));
+
 
     public SeenCommand(FeatherJoinDate plugin) {
         this.plugin = plugin;
@@ -49,13 +64,26 @@ public class SeenCommand implements CommandExecutor {
                 OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(args[0]);
 
                 if (!plugin.getJoinManager().isPlayerStored(offlinePlayer)) {
-                    sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player",Map.of(
-                            "player", args[0]
-                    )));
+                    List<String> uuids = plugin.getJoinManager().getUsernameUUIDs(args[0]);
+                    if (uuids.size() == 1) {
+                        OfflinePlayer offlinePlayer1 = plugin.getServer().getOfflinePlayer(fetchPlayerNameFromUUID(uuids.get(0)));
+                        sender.sendMessage(plugin.getJoinDateMessages().get("warning-old-username",Map.of(
+                                "player", args[0],
+                                "currentusername", fetchPlayerNameFromUUID(uuids.get(0))
+                        )));
+                        sender.sendMessage(this.formatJoinDateMessage(offlinePlayer1, false));
+                    } else if (uuids.size() > 1) {
+                        sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player-multiple",Map.of(
+                                "usernames", uuids.stream().map(this::fetchPlayerNameFromUUID).collect(Collectors.joining(", "))
+                        )));
+                    } else {
+                        sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player",Map.of(
+                                "player", args[0]
+                        )));
+                    }
                     return true;
                 }
 
-                // Checks passed.
                 sender.sendMessage(this.formatJoinDateMessage(offlinePlayer, false));
                 return true;
 
@@ -66,8 +94,7 @@ public class SeenCommand implements CommandExecutor {
     }
 
     private TextComponent formatJoinDateMessage(OfflinePlayer offlinePlayer, boolean self) {
-        DateTimeFormatter dateFormatter  = DateTimeFormatter.ofPattern("MMM dd, uuuu").withZone(ZoneId.of("America/Toronto"));
-        DateTimeFormatter timeFormatter  = DateTimeFormatter.ofPattern("hh:mm a").withZone(ZoneId.of("America/Toronto"));
+        String name = offlinePlayer.getName();
 
         String joinDate = dateFormatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getJoinDate((offlinePlayer))));
         String joinTime = timeFormatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getJoinDate((offlinePlayer))));
@@ -75,67 +102,33 @@ public class SeenCommand implements CommandExecutor {
         String lastLoginDate = dateFormatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getLastLogin(offlinePlayer)));
         String lastLoginTime = timeFormatter.format(Instant.ofEpochMilli(plugin.getJoinManager().getLastLogin(offlinePlayer)));
 
-        String usernames = String.join(", ", plugin.getJoinManager().getUsernames(offlinePlayer));
+        String usernames = String.join(", ", plugin.getJoinManager().GetPreviousUsernames(offlinePlayer, name));
+        boolean hasPastUsernames = !usernames.isEmpty();
 
+        Map<String, String> messageParams = new HashMap<>();
+        messageParams.put("player", name);
+        messageParams.put("joindate", joinDate);
+        messageParams.put("jointime", joinTime);
+        messageParams.put("lastlogindate", lastLoginDate);
+        messageParams.put("lastlogintime", lastLoginTime);
+        messageParams.put("usernames", usernames);
+
+        // Set 'timeonline' only if player is online
         if (offlinePlayer.isOnline()) {
             Duration duration = Duration.between(Instant.ofEpochMilli(plugin.getJoinManager().getLastLogin(offlinePlayer)), Instant.now());
             String timeOnline = formatDuration(duration);
-
-            if (isVanished(offlinePlayer.getPlayer())) {
-                if (self) {
-                    return plugin.getJoinDateMessages().get("joindate-self", Map.of(
-                            "joindate", joinDate,
-                            "jointime", joinTime,
-                            "lastlogindate", lastLoginDate,
-                            "lastlogintime", lastLoginTime,
-                            "timeonline", timeOnline,
-                            "usernames", usernames
-                    ));
-                }
-                else {
-                    return plugin.getJoinDateMessages().get("joindate-hidden", Map.of(
-                            "joindate", joinDate,
-                            "jointime", joinTime,
-                            "player", offlinePlayer.getName(),
-                            "usernames", usernames
-                    ));
-                }
-
-            } else {
-                if (self) {
-                    return plugin.getJoinDateMessages().get("joindate-self", Map.of(
-                            "joindate", joinDate,
-                            "jointime", joinTime,
-                            "lastlogindate", lastLoginDate,
-                            "lastlogintime", lastLoginTime,
-                            "timeonline", timeOnline,
-                            "usernames", usernames
-                    ));
-                }
-                else {
-                    return plugin.getJoinDateMessages().get("joindate-other", Map.of(
-                            "joindate", joinDate,
-                            "jointime", joinTime,
-                            "lastlogindate", lastLoginDate,
-                            "lastlogintime", lastLoginTime,
-                            "timeonline", timeOnline,
-                            "player", offlinePlayer.getName(),
-                            "usernames", usernames
-                    ));
-                }
-
-            }
-
-        } else {
-            return plugin.getJoinDateMessages().get("joindate-offline", Map.of(
-                    "joindate", joinDate,
-                    "jointime", joinTime,
-                    "lastlogindate", lastLoginDate,
-                    "lastlogintime", lastLoginTime,
-                    "player", offlinePlayer.getName(),
-                    "usernames", usernames
-            ));
+            messageParams.put("timeonline", timeOnline);
         }
+
+        // Select the appropriate message key
+        String messageKey;
+        if (offlinePlayer.isOnline() && !isVanished(offlinePlayer.getPlayer())) {
+            messageKey = hasPastUsernames ? "joindate" : "joindate-no-usernames";
+        } else {
+            messageKey = hasPastUsernames ? "joindate-offline" : "joindate-offline-no-usernames";
+        }
+
+        return plugin.getJoinDateMessages().get(messageKey, messageParams);
     }
 
     private static String formatDuration(Duration duration) {
@@ -150,4 +143,21 @@ public class SeenCommand implements CommandExecutor {
         }
         return false;
     }
+
+    public String fetchPlayerNameFromUUID(String uuid) {
+        try {
+            URL url = new URL("https://api.mojang.com/user/profile/" + uuid.replace("-", ""));
+            InputStreamReader reader = new InputStreamReader(url.openStream());
+            JsonElement element = JsonParser.parseReader(reader);
+            if (element.isJsonObject()) {
+                JsonObject jsonObject = element.getAsJsonObject();
+                return jsonObject.get("name").getAsString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return null;    }
+
+
 }

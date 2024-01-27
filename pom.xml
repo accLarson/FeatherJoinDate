@@ -6,7 +6,7 @@
 
     <groupId>dev.zerek</groupId>
     <artifactId>FeatherJoinDate</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
 
     <name>FeatherJoinDate</name>
@@ -97,6 +97,12 @@
             <groupId>com.github.LeonMangler</groupId>
             <artifactId>PremiumVanishAPI</artifactId>
             <version>2.9.0-4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.plan-player-analytics</groupId>
+            <artifactId>Plan</artifactId>
+            <version>5.6.2614</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

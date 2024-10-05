@@ -21,7 +21,7 @@ public final class FeatherJoinDate extends JavaPlugin {
     public void onEnable() {
         this.joinDateConfig = new JoinDateConfig(this);
         this.joinDateMessages = new JoinDateMessages(this);
-        this.databaseManager = new DatabaseManager(this);
+        this.databaseManager = new DatabaseManager(this, this.joinDateConfig);
         this.joinManager = new JoinManager(this);
         this.getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         this.getServer().getPluginManager().registerEvents(new PlayerShowListener(this),this);
@@ -34,15 +34,15 @@ public final class FeatherJoinDate extends JavaPlugin {
         // Plugin shutdown logic
     }
 
-    public JoinDateConfig getJoinDateConfig() {
-        return this.joinDateConfig;
-    }
-
     public JoinDateMessages getJoinDateMessages() {
         return this.joinDateMessages;
     }
 
-    public  JoinManager getJoinManager() {
+    public DatabaseManager getDatabaseManager() {
+        return this.databaseManager;
+    }
+
+    public JoinManager getJoinManager() {
         return this.joinManager;
     }
 }

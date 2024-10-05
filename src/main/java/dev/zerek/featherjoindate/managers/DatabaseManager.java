@@ -4,42 +4,51 @@ import dev.zerek.featherjoindate.FeatherJoinDate;
 import dev.zerek.featherjoindate.configs.JoinDateConfig;
 import org.javalite.activejdbc.Base;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import javax.sql.DataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 public class DatabaseManager {
 
     private final FeatherJoinDate plugin;
     private final JoinDateConfig joinDateConfig;
+    private DataSource dataSource;
 
-    public DatabaseManager(FeatherJoinDate plugin) {
+    public DatabaseManager(FeatherJoinDate plugin, JoinDateConfig joinDateConfig) {
         this.plugin = plugin;
-        this.joinDateConfig = plugin.getJoinDateConfig();
-        this.initMySQLConnection();
+        this.joinDateConfig = joinDateConfig;
+        this.initDataSource();
         this.initTables();
     }
 
-    private void initMySQLConnection() {
-        JoinDateConfig config = this.plugin.getJoinDateConfig();
-
-        String host = config.getMysqlHost();
-        int port = config.getMysqlPort();
-        String database = config.getMysqlDatabase();
-        String url = String.format("jdbc:mysql://%s:%d/%s", host, port, database);
-        String username = config.getMysqlUsername();
-        String password = config.getMysqlPassword();
+    private void initDataSource() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(String.format("jdbc:mysql://%s:%d/%s", 
+            joinDateConfig.getMysqlHost(), 
+            joinDateConfig.getMysqlPort(), 
+            joinDateConfig.getMysqlDatabase()));
+        config.setUsername(joinDateConfig.getMysqlUsername());
+        config.setPassword(joinDateConfig.getMysqlPassword());
+        config.setMaximumPoolSize(10);
 
         try {
-            if (!Base.hasConnection()) {
-                Base.open("com.mysql.cj.jdbc.Driver", url, username, password);
-            }
+            dataSource = new HikariDataSource(config);
         } catch (Exception exception) {
-            plugin.getLogger().severe("Unable to initialize connection.");
-            plugin.getLogger().severe("Ensure connection can be made with provided config.yml MySQL strings.");
-            plugin.getLogger().severe("Connection URL: " + url);
+            plugin.getLogger().severe("Unable to initialize connection pool.");
+            plugin.getLogger().severe("Ensure connection can be made with provided config.yml MySQL settings.");
+            plugin.getLogger().severe(exception.getMessage());
         }
     }
 
+    public Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
     public void close() {
-        if (Base.hasConnection()) {
-            Base.close();
+        if (dataSource instanceof HikariDataSource) {
+            ((HikariDataSource) dataSource).close();
         }
     }
 
@@ -49,8 +58,8 @@ public class DatabaseManager {
                 + " `mojang_uuid`   VARCHAR(64) PRIMARY KEY, "
                 + " `last_login`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                 + " `joindate`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)";
-        try {
-            Base.exec(query);
+        try (Connection conn = getConnection()) {
+            conn.createStatement().execute(query);
         } catch (Exception e) {
             plugin.getLogger().severe("Unable to ensure joins table exists.");
             plugin.getLogger().warning(e.getMessage());
@@ -61,21 +70,21 @@ public class DatabaseManager {
                 + " `mojang_uuid`   VARCHAR(64), "
                 + " `username`      VARCHAR(32), "
                 + " FOREIGN KEY (mojang_uuid) REFERENCES joins(mojang_uuid))";
-        try {
-            Base.exec(query2);
+        try (Connection conn = getConnection()) {
+            conn.createStatement().execute(query2);
         } catch (Exception e) {
             plugin.getLogger().severe("Unable to ensure usernames table exists.");
             plugin.getLogger().warning(e.getMessage());
         }
     }
 
-    // Use ActiveJDBC to execute updates and queries
     public boolean executeUpdate(String update) {
-        try {
-            Base.exec(update);
+        try (Connection conn = getConnection()) {
+            conn.createStatement().executeUpdate(update);
             return true;
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to execute update: ||| " + update + " |||");
+            plugin.getLogger().severe(e.getMessage());
             return false;
         }
     }

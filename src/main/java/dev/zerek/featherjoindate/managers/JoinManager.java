@@ -1,16 +1,12 @@
 package dev.zerek.featherjoindate.managers;
 
 import dev.zerek.featherjoindate.FeatherJoinDate;
-import dev.zerek.featherjoindate.data.Join;
-import dev.zerek.featherjoindate.data.Username;
 import org.bukkit.OfflinePlayer;
-import org.javalite.activejdbc.LazyList;
-import org.javalite.activejdbc.Model;
 
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.logging.Level;
 
 public class JoinManager {
 
@@ -20,82 +16,190 @@ public class JoinManager {
         this.plugin = plugin;
     }
 
-    public boolean isPlayerStored (OfflinePlayer offlinePlayer){
-        return Join.exists(offlinePlayer.getUniqueId().toString());
+    public boolean isPlayerStored(OfflinePlayer offlinePlayer) {
+        try {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String query = "SELECT COUNT(*) FROM joins WHERE mojang_uuid = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            return rs.getInt(1) > 0;
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Error checking if player is stored: " + e.getMessage());
+        }
+        return false;
     }
 
-    public boolean isUsernameStored (OfflinePlayer offlinePlayer){
-        Username usernameRecord = Username.findFirst("mojang_uuid = ? and username = ?", offlinePlayer.getUniqueId().toString(),offlinePlayer.getName());
-        return usernameRecord != null;
+    public boolean isUsernameStored(OfflinePlayer offlinePlayer) {
+        try {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String query = "SELECT COUNT(*) FROM usernames WHERE mojang_uuid = ? AND username = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
+                    stmt.setString(2, offlinePlayer.getName());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            return rs.getInt(1) > 0;
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Error checking if username is stored: " + e.getMessage());
+        }
+        return false;
     }
 
-    public List<String> getUsernameUUIDs (String username){
-        List<Username> usernameUUIDs = Username.find("username = ?", username);
-        return usernameUUIDs.stream()
-                .map(u -> u.getString("mojang_uuid"))
-                .collect(Collectors.toList());
+    public List<String> getUsernameUUIDs(String username) {
+        List<String> uuids = new ArrayList<>();
+        try {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String query = "SELECT mojang_uuid FROM usernames WHERE username = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, username);
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            uuids.add(rs.getString("mojang_uuid"));
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Error getting username UUIDs: " + e.getMessage());
+        } finally {
+            return uuids;
+        }
     }
 
     public void storeJoin(OfflinePlayer offlinePlayer) {
         String uuid = offlinePlayer.getUniqueId().toString();
 
-        if (!isPlayerStored(offlinePlayer)) {
-            try {
-                Join join = new Join().set("mojang_uuid", uuid);
-                join.insert();
-            } catch (Exception e) {
-                plugin.getLogger().severe("Error inserting " + offlinePlayer.getName() + " into joins database: " + e.getMessage());
-            }
-        } else {
-            // Player exists in the database, update the 'last_login' column
-            Join join = Join.findById(uuid);
-            if (join != null) {
-                try {
-                    join.set("last_login", Timestamp.from(Instant.now()));
-                    join.saveIt();
-                } catch (Exception e) {
-                    plugin.getLogger().severe("Error updating " + offlinePlayer.getName() + " latest join in database: " + e.getMessage());
+        try {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                if (!isPlayerStored(offlinePlayer)) {
+                    String query = "INSERT INTO joins (mojang_uuid) VALUES (?)";
+                    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                        stmt.setString(1, uuid);
+                        stmt.executeUpdate();
+                    }
+                } else {
+                    String query = "UPDATE joins SET last_login = CURRENT_TIMESTAMP WHERE mojang_uuid = ?";
+                    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                        stmt.setString(1, uuid);
+                        stmt.executeUpdate();
+                    }
                 }
-            } else {
-                plugin.getLogger().severe(offlinePlayer.getName() + " found but unable to retrieve the record.");
-            }
-        }
 
-        if (!isUsernameStored(offlinePlayer)) {
-            try {
-                Username username = new Username();
-                username.set("mojang_uuid", offlinePlayer.getUniqueId().toString());
-                username.set("username", offlinePlayer.getName());
-                username.insert();
-            } catch (Exception e) {
-                plugin.getLogger().severe("Error inserting " + offlinePlayer.getName() + " into username database: " + e.getMessage());
+                if (!isUsernameStored(offlinePlayer)) {
+                    String query = "INSERT INTO usernames (mojang_uuid, username) VALUES (?, ?)";
+                    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                        stmt.setString(1, uuid);
+                        stmt.setString(2, offlinePlayer.getName());
+                        stmt.executeUpdate();
+                    }
+                }
             }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Error storing join: " + e.getMessage());
+        } finally {
+            // No need to close connection as it's handled by try-with-resources
         }
-
     }
 
-
-    public long getJoinDate (OfflinePlayer offlinePlayer){
-        if (isPlayerStored(offlinePlayer)) {
-            Join join = Join.findById(offlinePlayer.getUniqueId().toString());
-            return join.getLong("joindate");
+    public long getJoinDate(OfflinePlayer offlinePlayer) {
+        plugin.getLogger().info("Fetching join date for player: " + offlinePlayer.getName());
+        try {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String query = "SELECT joindate FROM joins WHERE mojang_uuid = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            Timestamp joinDate = rs.getTimestamp("joindate");
+                            plugin.getLogger().info("Join date found: " + joinDate);
+                            return joinDate != null ? joinDate.getTime() : 0;
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error getting join date for " + offlinePlayer.getName(), e);
         }
-        else return 0;
+        plugin.getLogger().warning("No join date found for player: " + offlinePlayer.getName());
+        return 0;
     }
 
     public long getLastLogin(OfflinePlayer offlinePlayer) {
-        if (isPlayerStored(offlinePlayer)) {
-            Join join = Join.findById(offlinePlayer.getUniqueId().toString());
-            return join.getLong("last_login");
+        plugin.getLogger().info("Fetching last login for player: " + offlinePlayer.getName());
+        try {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String query = "SELECT last_login FROM joins WHERE mojang_uuid = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            Timestamp lastLogin = rs.getTimestamp("last_login");
+                            plugin.getLogger().info("Last login found: " + lastLogin);
+                            return lastLogin != null ? lastLogin.getTime() : 0;
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error getting last login for " + offlinePlayer.getName(), e);
         }
-        else return 0;
+        plugin.getLogger().warning("No last login found for player: " + offlinePlayer.getName());
+        return 0;
     }
 
     public List<String> GetPreviousUsernames(OfflinePlayer offlinePlayer, String currentUsername) {
-        List<Username> offlinePlayerUsernames = Username.where("mojang_uuid = ?", offlinePlayer.getUniqueId().toString());
-        return offlinePlayerUsernames.stream()
-                .map(u -> u.getString("username"))
-                .filter(username -> !username.equals(currentUsername))
-                .collect(Collectors.toList());
+        List<String> previousUsernames = new ArrayList<>();
+        try {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String query = "SELECT username FROM usernames WHERE mojang_uuid = ? AND username != ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
+                    stmt.setString(2, currentUsername);
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            previousUsernames.add(rs.getString("username"));
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Error getting previous usernames: " + e.getMessage());
+        } finally {
+            return previousUsernames;
+        }
+    }
+
+    public void testDatabaseConnection(OfflinePlayer offlinePlayer) {
+        plugin.getLogger().info("Testing database connection for player: " + offlinePlayer.getName());
+        try {
+            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+                String query = "SELECT * FROM joins WHERE mojang_uuid = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            plugin.getLogger().info("Player found in database:");
+                            plugin.getLogger().info("UUID: " + rs.getString("mojang_uuid"));
+                            plugin.getLogger().info("Join Date: " + rs.getTimestamp("joindate"));
+                            plugin.getLogger().info("Last Login: " + rs.getTimestamp("last_login"));
+                        } else {
+                            plugin.getLogger().warning("Player not found in database");
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error testing database connection", e);
+        }
     }
 }

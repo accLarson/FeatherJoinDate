@@ -2,7 +2,7 @@ joindate: "<white>•<#777777>--- <#ffffff>feather64 Join Statistics</#ffffff> -
                 <br><gray><player> Join Statistics
                 <br><#656b96>First joined: <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
                 <br><#656b96>Last logged: <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
-                <br><#656b96>Online for: <#949bd1><timeonline><#656b96>.
+                <br><#656b96>Current Session: <#949bd1><timeonline><#656b96>.
                 <br><#656b96>Past Name(s): <#949bd1><usernames>
                 <br><white>•<#777777>----------------------------------------------------</#777777>•"
 
@@ -17,7 +17,7 @@ joindate-no-usernames: "<white>•<#777777>--- <#ffffff>feather64 Join Statistic
                 <br><gray><player> Join Statistics
                 <br><#656b96>First joined: <#949bd1><joindate> <#656b96>at <#949bd1><jointime><#656b96>.
                 <br><#656b96>Last logged: <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
-                <br><#656b96>Online for: <#949bd1><timeonline><#656b96>.
+                <br><#656b96>Current Session: <#949bd1><timeonline><#656b96>.
                 <br><white>•<#777777>----------------------------------------------------</#777777>•"
 
 joindate-offline-no-usernames: "<white>•<#777777>--- <#ffffff>feather64 Join Statistics</#ffffff> --------------------------</#777777>•

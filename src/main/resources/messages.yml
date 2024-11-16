@@ -26,6 +26,8 @@ joindate-offline-no-usernames: "<white>•<#777777>--- <#ffffff>feather64 Join S
                 <br><#656b96>Last logged: <#949bd1><lastlogindate> <#656b96>at <#949bd1><lastlogintime><#656b96>.
                 <br><white>•<#777777>----------------------------------------------------</#777777>•"
 
+unknown-value-warning: "<#db8d8c>Warning: <#c47372>unknown values. Possible Error, please try again."
+
 warning-old-username: "<#db8d8c>Warning <#c47372>- <#db8d8c><player> <#c47372>is an old username. Showing <#db8d8c><currentusername>."
 error-no-permission: "<#db8d8c>Error <#c47372>- You do not have permission to run this command."
 error-not-player: "<#db8d8c>Error <#c47372>- You must run this command as a player to view your join date."

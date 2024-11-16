@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.zerek.featherjoindate.FeatherJoinDate;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -20,6 +21,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,124 +43,108 @@ public class SeenCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
+        if (!sender.hasPermission("feather.seen")) {
+            sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission"));
+            return true;
+        }
+
+        OfflinePlayer offlinePlayer;
+
         switch (args.length) {
             case 0:
-                if (!sender.hasPermission("feather.seen")) {
-                    sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission"));
-                    return true;
-                }
                 if (!(sender instanceof Player)) {
                     sender.sendMessage(plugin.getJoinDateMessages().get("error-not-player"));
                     return true;
                 }
-                // Checks passed.
-                sender.sendMessage(this.formatJoinDateMessage((OfflinePlayer) sender,true));
-                return true;
+                offlinePlayer = (OfflinePlayer) sender;
+                break;
 
             case 1:
-                if (!sender.hasPermission("feather.seen.others")) {
-                    sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission"));
-                    return true;
-                }
-                
-                // Start asynchronous processing
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(args[0]);
-
-                            if (!plugin.getJoinManager().isPlayerStored(offlinePlayer)) {
-                                List<String> uuids = plugin.getJoinManager().getUsernameUUIDs(args[0]);
-                                if (uuids.size() == 1) {
-                                    String currentUsername = fetchPlayerNameFromUUID(uuids.get(0));
-                                    OfflinePlayer offlinePlayer1 = plugin.getServer().getOfflinePlayer(currentUsername);
-                                    
-                                    // Switch back to main thread to send messages
-                                    new BukkitRunnable() {
-                                        @Override
-                                        public void run() {
-                                            sender.sendMessage(plugin.getJoinDateMessages().get("warning-old-username", Map.of(
-                                                    "player", args[0],
-                                                    "currentusername", currentUsername
-                                            )));
-                                            sender.sendMessage(formatJoinDateMessage(offlinePlayer1, false));
-                                        }
-                                    }.runTask(plugin);
-                                } else if (uuids.size() > 1) {
-                                    final String usernamesJoined = uuids.stream()
-                                        .map(SeenCommand.this::fetchPlayerNameFromUUID)
-                                        .collect(Collectors.joining(", "));
-                                    
-                                    // Switch back to main thread to send message
-                                    new BukkitRunnable() {
-                                        @Override
-                                        public void run() {
-                                            sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player-multiple", Map.of(
-                                                    "usernames", usernamesJoined
-                                            )));
-                                        }
-                                    }.runTask(plugin);
-                                } else {
-                                    // Switch back to main thread to send message
-                                    new BukkitRunnable() {
-                                        @Override
-                                        public void run() {
-                                            sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player", Map.of(
-                                                    "player", args[0]
-                                            )));
-                                        }
-                                    }.runTask(plugin);
-                                }
-                            } else {
-                                // Player is stored, send join date message
-                                final TextComponent message = formatJoinDateMessage(offlinePlayer, false);
-                                new BukkitRunnable() {
-                                    @Override
-                                    public void run() {
-                                        sender.sendMessage(message);
-                                    }
-                                }.runTask(plugin);
-                            }
-                        } finally {
-                        }
-                    }
-                }.runTaskAsynchronously(plugin);
-                
-                return true;
+                offlinePlayer = plugin.getServer().getOfflinePlayer(args[0]);
+                break;
 
             default:
                 sender.sendMessage(plugin.getJoinDateMessages().get("error-arg-count"));
                 return true;
         }
+
+        // Create a CompletableFuture to handle the async data gathering
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    // Create a data container to hold all the information
+                    class PlayerData {
+                        long joinDate = 0;
+                        long lastLogin = 0;
+                        List<String> previousUsernames = new ArrayList<>();
+                    }
+                    
+                    PlayerData data = new PlayerData();
+                    
+                    // First verify the player exists in database
+                    boolean isStored = plugin.getJoinManager().isPlayerStored(offlinePlayer);
+                    
+                    if (!isStored) {
+                        handleUnseenPlayer(sender, args[0]);
+                        return;
+                    }
+
+                    // Gather all required data before proceeding
+                    data.joinDate = plugin.getJoinManager().getJoinDate(offlinePlayer);
+                    data.lastLogin = plugin.getJoinManager().getLastLogin(offlinePlayer);
+                    data.previousUsernames = plugin.getJoinManager().GetPreviousUsernames(
+                            offlinePlayer, 
+                            offlinePlayer.getName()
+                    );
+
+                    // Switch back to main thread to send the message
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            sender.sendMessage(formatJoinDateMessage(
+                                offlinePlayer, false, 
+                                data.joinDate, 
+                                data.lastLogin, 
+                                data.previousUsernames));
+                        }
+                    }.runTask(plugin);
+                } catch (Exception e) {
+                    plugin.getLogger().log(Level.SEVERE, "Error processing seen command", e);
+                }
+            }
+        }.runTaskAsynchronously(plugin);
+
+        return true;
     }
 
-    private TextComponent formatJoinDateMessage(OfflinePlayer offlinePlayer, boolean self) {
+    private TextComponent formatJoinDateMessage(OfflinePlayer offlinePlayer, boolean self, 
+            long joinDateMillis, long lastLoginMillis, List<String> previousUsernames) {
         String name = offlinePlayer.getName();
+        boolean hasUnknownValues = false;
 
-        plugin.getLogger().info("Formatting join date message for player: " + name);
 
-        long joinDateMillis = plugin.getJoinManager().getJoinDate(offlinePlayer);
         String joinDate = "Unknown";
         String joinTime = "Unknown";
         if (joinDateMillis > 0) {
             joinDate = dateFormatter.format(Instant.ofEpochMilli(joinDateMillis));
             joinTime = timeFormatter.format(Instant.ofEpochMilli(joinDateMillis));
+        } else {
+            hasUnknownValues = true;
         }
 
-        long lastLoginMillis = plugin.getJoinManager().getLastLogin(offlinePlayer);
         String lastLoginDate = "Unknown";
         String lastLoginTime = "Unknown";
         if (lastLoginMillis > 0) {
             lastLoginDate = dateFormatter.format(Instant.ofEpochMilli(lastLoginMillis));
             lastLoginTime = timeFormatter.format(Instant.ofEpochMilli(lastLoginMillis));
+        } else {
+            hasUnknownValues = true;
         }
 
-        String usernames = String.join(", ", plugin.getJoinManager().GetPreviousUsernames(offlinePlayer, name));
-        boolean hasPastUsernames = !usernames.isEmpty();
+        boolean hasPastUsernames = !previousUsernames.isEmpty();
+        String usernames = String.join(", ", previousUsernames);
 
-        plugin.getLogger().info("Join date: " + joinDate + " " + joinTime);
-        plugin.getLogger().info("Last login: " + lastLoginDate + " " + lastLoginTime);
 
         Map<String, String> messageParams = new HashMap<>();
         messageParams.put("player", name != null ? name : "Unknown");
@@ -183,7 +169,10 @@ public class SeenCommand implements CommandExecutor {
             messageKey = hasPastUsernames ? "joindate-offline" : "joindate-offline-no-usernames";
         }
 
-        return plugin.getJoinDateMessages().get(messageKey, messageParams);
+        TextComponent baseMessage = plugin.getJoinDateMessages().get(messageKey, messageParams);
+        
+        if (hasUnknownValues) return plugin.getJoinDateMessages().get("unknown-value-warning").append(Component.newline()).append(baseMessage);
+        else return baseMessage;
     }
 
     private static String formatDuration(Duration duration) {
@@ -199,6 +188,72 @@ public class SeenCommand implements CommandExecutor {
         return false;
     }
 
+    private void handleUnseenPlayer(CommandSender sender, String playerName) {
+        try {
+            List<String> uuids = plugin.getJoinManager().getUsernameUUIDs(playerName);
+
+            if (uuids.size() > 1) {
+                // Multiple UUIDs found - collect current usernames for all UUIDs
+                List<String> currentUsernames = uuids.stream()
+                    .map(this::fetchPlayerNameFromUUID)
+                    .filter(name -> name != null)
+                    .collect(Collectors.toList());
+                
+                // Send the multiple users message
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        sender.sendMessage(plugin.getJoinDateMessages().get(
+                            "error-unseen-player-multiple",
+                            Map.of("usernames", String.join(", ", currentUsernames))
+                        ));
+                    }
+                }.runTask(plugin);
+            } else if (uuids.size() == 1) {
+                String currentUsername = fetchPlayerNameFromUUID(uuids.get(0));
+                if (currentUsername == null || currentUsername.equals(playerName)) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            sendNeverJoinedMessage(sender, playerName);
+                        }
+                    }.runTask(plugin);
+                    return;
+                }
+                
+                OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(currentUsername);
+                
+                // Gather all data before proceeding
+                long joinDate = plugin.getJoinManager().getJoinDate(offlinePlayer);
+                long lastLogin = plugin.getJoinManager().getLastLogin(offlinePlayer);
+                List<String> previousUsernames = plugin.getJoinManager().GetPreviousUsernames(
+                        offlinePlayer, 
+                        currentUsername
+                );
+                
+                // Switch back to main thread to send messages
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        sender.sendMessage(plugin.getJoinDateMessages().get("warning-old-username", Map.of(
+                                "player", playerName,
+                                "currentusername", currentUsername
+                        )));
+                        sender.sendMessage(formatJoinDateMessage(offlinePlayer, false, joinDate, lastLogin, previousUsernames));
+                    }
+                }.runTask(plugin);
+            } else sendNeverJoinedMessage(sender, playerName);  // No UUIDs found
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Error handling unseen player", e);
+        }
+    }
+
+    private void sendNeverJoinedMessage(CommandSender sender, String playerName) {
+        Map<String, String> params = new HashMap<>();
+        params.put("player", playerName);
+        sender.sendMessage(plugin.getJoinDateMessages().get("error-unseen-player", params));
+    }
+
     public String fetchPlayerNameFromUUID(String uuid) {
         try {
             URL url = new URL("https://api.mojang.com/user/profile/" + uuid.replace("-", ""));
@@ -212,7 +267,6 @@ public class SeenCommand implements CommandExecutor {
         } catch (Exception e) {
             plugin.getLogger().warning("Error fetching player name for UUID " + uuid + ": " + e.getMessage());
         }
-        return null;    }
-
-
+        return null;    
+    }
 }

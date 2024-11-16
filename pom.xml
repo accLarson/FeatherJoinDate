@@ -6,7 +6,7 @@
 
     <groupId>dev.zerek</groupId>
     <artifactId>FeatherJoinDate</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.3</version>
     <packaging>jar</packaging>
 
     <name>FeatherJoinDate</name>
@@ -85,13 +85,13 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.20.6-R0.1-SNAPSHOT</version>
+            <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.javalite</groupId>
             <artifactId>activejdbc</artifactId>
-            <version>3.4-j11</version>
+            <version>3.5-j11</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>

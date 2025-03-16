@@ -30,7 +30,7 @@ public class SeenCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, 
                             @NotNull String label, @NotNull String[] args) {
         // Check permission
-        if (!sender.hasPermission("featherjoindate.seen")) {
+        if (!sender.hasPermission("feather.joindate.seen")) {
             sender.sendMessage(plugin.getJoinDateMessages().get("error-no-permission"));
             return true;
         }

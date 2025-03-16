@@ -34,6 +34,11 @@ public class JoinDateMessages {
         this.init();
     }
 
+    /**
+     * Initializes the messages from the config file.
+     * Creates the file if it doesn't exist.
+     * Loads all message keys into memory.
+     */
     private void init() {
         File file = new File(this.plugin.getDataFolder(), "messages.yml");
         if (!file.exists()) this.plugin.saveResource("messages.yml", false);
@@ -41,9 +46,14 @@ public class JoinDateMessages {
         messagesConfig.getKeys(false).forEach(key -> messages.put(key,messagesConfig.getString(key)));
     }
 
+    /**
+     * Gets a message with no placeholders.
+     */
     public TextComponent get(String key){
-        if (messages.containsKey(key)) return (TextComponent) mm.deserialize(messages.get(key));
-        else return Component.text("");
+        if (messages.containsKey(key)) {
+            return (TextComponent) mm.deserialize(messages.get(key));
+        }
+        return Component.text("Missing message: " + key);
     }
 
     public TextComponent get(String key, Map<String, String> placeholders) {
@@ -57,6 +67,6 @@ public class JoinDateMessages {
 
             return (TextComponent) mm.deserialize(messages.get(key), TagResolver.resolver(rs));
 
-        } else return Component.text("");
+        } else return Component.text("Missing message: " + key);
     }
 }

@@ -2,53 +2,35 @@ package dev.zerek.featherjoindate.managers;
 
 import dev.zerek.featherjoindate.FeatherJoinDate;
 import dev.zerek.featherjoindate.configs.JoinDateConfig;
-import org.javalite.activejdbc.Base;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
-import javax.sql.DataSource;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 public class DatabaseManager {
 
     private final FeatherJoinDate plugin;
-    private final JoinDateConfig joinDateConfig;
-    private DataSource dataSource;
+    private final String jdbcUrl;
+    private final String username;
+    private final String password;
 
     public DatabaseManager(FeatherJoinDate plugin, JoinDateConfig joinDateConfig) {
         this.plugin = plugin;
-        this.joinDateConfig = joinDateConfig;
-        this.initDataSource();
+        this.jdbcUrl = String.format("jdbc:mysql://%s:%d/%s",
+            joinDateConfig.getMysqlHost(),
+            joinDateConfig.getMysqlPort(),
+            joinDateConfig.getMysqlDatabase());
+        this.username = joinDateConfig.getMysqlUsername();
+        this.password = joinDateConfig.getMysqlPassword();
         this.initTables();
     }
 
-    private void initDataSource() {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(String.format("jdbc:mysql://%s:%d/%s", 
-            joinDateConfig.getMysqlHost(), 
-            joinDateConfig.getMysqlPort(), 
-            joinDateConfig.getMysqlDatabase()));
-        config.setUsername(joinDateConfig.getMysqlUsername());
-        config.setPassword(joinDateConfig.getMysqlPassword());
-        config.setMaximumPoolSize(10);
-
-        try {
-            dataSource = new HikariDataSource(config);
-        } catch (Exception exception) {
-            plugin.getLogger().severe("Unable to initialize connection pool.");
-            plugin.getLogger().severe("Ensure connection can be made with provided config.yml MySQL settings.");
-            plugin.getLogger().severe(exception.getMessage());
-        }
-    }
-
     public Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
-    }
-
-    public void close() {
-        if (dataSource instanceof HikariDataSource) {
-            ((HikariDataSource) dataSource).close();
+        try {
+            return DriverManager.getConnection(jdbcUrl, username, password);
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to establish database connection: " + e.getMessage());
+            throw e;
         }
     }
 
@@ -75,17 +57,6 @@ public class DatabaseManager {
         } catch (Exception e) {
             plugin.getLogger().severe("Unable to ensure usernames table exists.");
             plugin.getLogger().warning(e.getMessage());
-        }
-    }
-
-    public boolean executeUpdate(String update) {
-        try (Connection conn = getConnection()) {
-            conn.createStatement().executeUpdate(update);
-            return true;
-        } catch (Exception e) {
-            plugin.getLogger().severe("Failed to execute update: ||| " + update + " |||");
-            plugin.getLogger().severe(e.getMessage());
-            return false;
         }
     }
 }

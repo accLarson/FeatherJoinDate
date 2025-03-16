@@ -5,173 +5,174 @@ import org.bukkit.OfflinePlayer;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class JoinManager {
 
     private final FeatherJoinDate plugin;
 
+    /**
+     * Constructs a new JoinManager.
+     *
+     * @param plugin The main plugin instance
+     */
     public JoinManager(FeatherJoinDate plugin) {
         this.plugin = plugin;
     }
 
-    public boolean isPlayerStored(OfflinePlayer offlinePlayer) {
-        try {
-            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
-                String query = "SELECT COUNT(*) FROM joins WHERE mojang_uuid = ?";
-                try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        if (rs.next()) {
-                            return rs.getInt(1) > 0;
-                        }
+    // === Data Storage ===
+
+    /**
+     * Stores or updates a player's join information in the database using a transaction.
+     * - Updates last_login if player exists, creates new entry if they don't
+     * - Stores username if it's not already stored
+     *
+     * @param offlinePlayer The player whose join information to store
+     */
+    public void storeJoin(OfflinePlayer offlinePlayer) {
+        String uuid = offlinePlayer.getUniqueId().toString();
+        String username = offlinePlayer.getName();
+        
+        if (username == null) {
+            plugin.getLogger().warning("Cannot store join for player with null username");
+            return;
+        }
+
+        try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+           conn.setAutoCommit(false);
+           
+            try {
+                // Use REPLACE INTO to handle both insert and update cases
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "INSERT INTO joins (mojang_uuid, last_login) VALUES (?, CURRENT_TIMESTAMP) " +
+                        "ON DUPLICATE KEY UPDATE last_login = CURRENT_TIMESTAMP")) {
+                stmt.setString(1, uuid);
+                stmt.executeUpdate();
+                }
+                
+                // Insert username if it doesn't exist
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "INSERT IGNORE INTO usernames (mojang_uuid, username) VALUES (?, ?)")) {
+                    stmt.setString(1, uuid);
+                    stmt.setString(2, username);
+                    stmt.executeUpdate();
+                }
+                
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Error storing join data: " + e.getMessage());
+        }
+    }
+
+    // === Data Retrieval ===
+
+    /**
+     * Retrieves all player data in a single database query.
+     *
+     * @param offlinePlayer The player whose data to retrieve
+     * @return A Map containing join date, last login, and previous usernames
+     */
+    public Map<String, Object> getPlayerFullData(OfflinePlayer offlinePlayer) {
+        Map<String, Object> playerData = new HashMap<>();
+        
+        String query = "SELECT j.joindate, j.last_login, " +
+                      "(SELECT GROUP_CONCAT(u.username) FROM usernames u " +
+                      "WHERE u.mojang_uuid = j.mojang_uuid AND u.username != ?) AS previous_usernames " +
+                      "FROM joins j WHERE j.mojang_uuid = ?";
+                      
+        try (Connection conn = plugin.getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            
+            String currentUsername = offlinePlayer.getName();
+            String uuid = offlinePlayer.getUniqueId().toString();
+            
+            stmt.setString(1, currentUsername);
+            stmt.setString(2, uuid);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Timestamp joinDate = rs.getTimestamp("joindate");
+                    Timestamp lastLogin = rs.getTimestamp("last_login");
+                    
+                    playerData.put("exists", true);
+                    playerData.put("joinDate", joinDate != null ? joinDate.getTime() : 0L);
+                    playerData.put("lastLogin", lastLogin != null ? lastLogin.getTime() : 0L);
+                    
+                    String previousUsernamesStr = rs.getString("previous_usernames");
+                    List<String> previousUsernames = new ArrayList<>();
+                    if (previousUsernamesStr != null && !previousUsernamesStr.isEmpty()) {
+                        previousUsernames = Arrays.asList(previousUsernamesStr.split(","));
                     }
+                    playerData.put("previousUsernames", previousUsernames);
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error checking if player is stored: " + e.getMessage());
+            plugin.getLogger().severe("Error getting player full data: " + e.getMessage());
+        } finally {
+            // Set default values if they weren't set in the try block
+            playerData.putIfAbsent("exists", false);
+            playerData.putIfAbsent("joinDate", 0L);
+            playerData.putIfAbsent("lastLogin", 0L);
+            playerData.putIfAbsent("previousUsernames", new ArrayList<String>());
         }
-        return false;
+        return playerData;
     }
 
-    public boolean isUsernameStored(OfflinePlayer offlinePlayer) {
-        try {
-            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
-                String query = "SELECT COUNT(*) FROM usernames WHERE mojang_uuid = ? AND username = ?";
-                try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
-                    stmt.setString(2, offlinePlayer.getName());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        if (rs.next()) {
-                            return rs.getInt(1) > 0;
-                        }
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().severe("Error checking if username is stored: " + e.getMessage());
-        }
-        return false;
-    }
-
+    /**
+     * Retrieves all UUIDs associated with a specific username.
+     *
+     * @param username The username to look up
+     * @return A List of String containing all UUIDs that have used this username
+     */
     public List<String> getUsernameUUIDs(String username) {
         List<String> uuids = new ArrayList<>();
-        try {
-            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
-                String query = "SELECT mojang_uuid FROM usernames WHERE username = ?";
-                try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setString(1, username);
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        while (rs.next()) {
-                            uuids.add(rs.getString("mojang_uuid"));
-                        }
-                    }
+        String query = "SELECT mojang_uuid FROM usernames WHERE username = ?";
+        try (Connection conn = plugin.getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    uuids.add(rs.getString("mojang_uuid"));
                 }
             }
         } catch (SQLException e) {
             plugin.getLogger().severe("Error getting username UUIDs: " + e.getMessage());
-        } finally {
-            return uuids;
         }
+        return uuids;
     }
 
-    public void storeJoin(OfflinePlayer offlinePlayer) {
-        String uuid = offlinePlayer.getUniqueId().toString();
-
-        try {
-            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
-                if (!isPlayerStored(offlinePlayer)) {
-                    String query = "INSERT INTO joins (mojang_uuid) VALUES (?)";
-                    try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                        stmt.setString(1, uuid);
-                        stmt.executeUpdate();
-                    }
-                } else {
-                    String query = "UPDATE joins SET last_login = CURRENT_TIMESTAMP WHERE mojang_uuid = ?";
-                    try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                        stmt.setString(1, uuid);
-                        stmt.executeUpdate();
-                    }
-                }
-
-                if (!isUsernameStored(offlinePlayer)) {
-                    String query = "INSERT INTO usernames (mojang_uuid, username) VALUES (?, ?)";
-                    try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                        stmt.setString(1, uuid);
-                        stmt.setString(2, offlinePlayer.getName());
-                        stmt.executeUpdate();
-                    }
+    /**
+     * Retrieves the most recent username associated with a UUID from the database.
+     *
+     * @param uuid The UUID to look up
+     * @return The most recent username, or null if not found
+     */
+    public String getMostRecentUsernameForUUID(String uuid) {
+        String username = null;
+        String query = "SELECT username FROM usernames WHERE mojang_uuid = ? " +
+                      "ORDER BY id DESC LIMIT 1";
+                      
+        try (Connection conn = plugin.getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            
+            stmt.setString(1, uuid);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    username = rs.getString("username");
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error storing join: " + e.getMessage());
-        } finally {
-            // No need to close connection as it's handled by try-with-resources
+            plugin.getLogger().severe("Error getting username for UUID: " + e.getMessage());
         }
-    }
-
-    public long getJoinDate(OfflinePlayer offlinePlayer) {
-        try {
-            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
-                String query = "SELECT joindate FROM joins WHERE mojang_uuid = ?";
-                try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        if (rs.next()) {
-                            Timestamp joinDate = rs.getTimestamp("joindate");
-                            return joinDate != null ? joinDate.getTime() : 0;
-                        }
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Error getting join date for " + offlinePlayer.getName(), e);
-        }
-        plugin.getLogger().warning("No join date found for player: " + offlinePlayer.getName());
-        return 0;
-    }
-
-    public long getLastLogin(OfflinePlayer offlinePlayer) {
-        try {
-            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
-                String query = "SELECT last_login FROM joins WHERE mojang_uuid = ?";
-                try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        if (rs.next()) {
-                            Timestamp lastLogin = rs.getTimestamp("last_login");
-                            return lastLogin != null ? lastLogin.getTime() : 0;
-                        }
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Error getting last login for " + offlinePlayer.getName(), e);
-        }
-        plugin.getLogger().warning("No last login found for player: " + offlinePlayer.getName());
-        return 0;
-    }
-
-    public List<String> GetPreviousUsernames(OfflinePlayer offlinePlayer, String currentUsername) {
-        List<String> previousUsernames = new ArrayList<>();
-        try {
-            try (Connection conn = plugin.getDatabaseManager().getConnection()) {
-                String query = "SELECT username FROM usernames WHERE mojang_uuid = ? AND username != ?";
-                try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setString(1, offlinePlayer.getUniqueId().toString());
-                    stmt.setString(2, currentUsername);
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        while (rs.next()) {
-                            previousUsernames.add(rs.getString("username"));
-                        }
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().severe("Error getting previous usernames: " + e.getMessage());
-        } finally {
-            return previousUsernames;
-        }
+        return username;
     }
 }

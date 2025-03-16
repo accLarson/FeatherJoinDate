@@ -6,7 +6,7 @@
 
     <groupId>dev.zerek</groupId>
     <artifactId>FeatherJoinDate</artifactId>
-    <version>1.2.3</version>
+    <version>1.3.0</version>
     <packaging>jar</packaging>
 
     <name>FeatherJoinDate</name>
@@ -92,11 +92,6 @@
             <groupId>org.javalite</groupId>
             <artifactId>activejdbc</artifactId>
             <version>3.5-j11</version>
-        </dependency>
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>5.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.LeonMangler</groupId>

@@ -7,6 +7,7 @@ import dev.zerek.featherjoindate.listeners.PlayerJoinListener;
 import dev.zerek.featherjoindate.listeners.PlayerShowListener;
 import dev.zerek.featherjoindate.managers.DatabaseManager;
 import dev.zerek.featherjoindate.managers.JoinManager;
+import dev.zerek.featherjoindate.utils.MineToolsAPIUtility;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FeatherJoinDate extends JavaPlugin {
@@ -15,7 +16,7 @@ public final class FeatherJoinDate extends JavaPlugin {
     private JoinDateMessages joinDateMessages;
     private DatabaseManager databaseManager;
     private JoinManager joinManager;
-
+    private MineToolsAPIUtility mineToolsAPIUtility;
 
     @Override
     public void onEnable() {
@@ -23,14 +24,14 @@ public final class FeatherJoinDate extends JavaPlugin {
         this.joinDateMessages = new JoinDateMessages(this);
         this.databaseManager = new DatabaseManager(this, this.joinDateConfig);
         this.joinManager = new JoinManager(this);
+        this.mineToolsAPIUtility = new MineToolsAPIUtility(this);
         this.getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
-        this.getServer().getPluginManager().registerEvents(new PlayerShowListener(this),this);
+        this.getServer().getPluginManager().registerEvents(new PlayerShowListener(this), this);
         this.getCommand("seen").setExecutor(new SeenCommand(this));
     }
 
     @Override
     public void onDisable() {
-        if (this.databaseManager != null) this.databaseManager.close();
         // Plugin shutdown logic
     }
 
@@ -44,5 +45,9 @@ public final class FeatherJoinDate extends JavaPlugin {
 
     public JoinManager getJoinManager() {
         return this.joinManager;
+    }
+    
+    public MineToolsAPIUtility getMineToolsAPIUtility() {
+        return this.mineToolsAPIUtility;
     }
 }

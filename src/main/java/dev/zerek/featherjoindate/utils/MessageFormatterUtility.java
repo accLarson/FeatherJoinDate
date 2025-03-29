@@ -7,7 +7,9 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.MetadataValue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +51,7 @@ public class MessageFormatterUtility {
         String lastLoginTime = TimeFormatterUtility.formatTime(lastLoginMillis);
 
         boolean hasPastUsernames = !previousUsernames.isEmpty();
-        String usernames = String.join(", ", previousUsernames);
+        String usernames = String.join(", ", new ArrayList<>(new HashSet<>(previousUsernames)));
 
         Map<String, String> messageParams = new HashMap<>();
         messageParams.put("player", name);

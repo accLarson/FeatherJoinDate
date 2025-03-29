@@ -13,8 +13,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -93,7 +95,7 @@ public class SeenCommand implements CommandExecutor {
         if (uuids.size() > 1) {
             // Multiple players have used this username - check if any currently has it
             OfflinePlayer currentHolder = null;
-            List<String> currentUsernames = new ArrayList<>(); 
+            Set<String> currentUsernames = new HashSet<>(); 
 
             for (String uuid : uuids) {
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
@@ -167,7 +169,7 @@ public class SeenCommand implements CommandExecutor {
                 // Now send the message with all usernames we found
                 if (!currentUsernames.isEmpty()) {
                     // Send message on the main thread
-                    final List<String> finalUsernames = currentUsernames;
+                    final List<String> finalUsernames = new ArrayList<>(new HashSet<>(currentUsernames));
                     Bukkit.getScheduler().runTask(plugin, () -> {
                         Map<String, String> params = new HashMap<>();
                         params.put("usernames", String.join(", ", finalUsernames));

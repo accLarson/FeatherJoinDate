@@ -54,14 +54,25 @@ public class JoinManager {
                 stmt.executeUpdate();
                 }
                 
-                // Insert username if it doesn't exist
+                // Check if this UUID + username combination already exists
                 try (PreparedStatement stmt = conn.prepareStatement(
-                        "INSERT IGNORE INTO usernames (mojang_uuid, username) VALUES (?, ?)")) {
+                        "SELECT 1 FROM usernames WHERE mojang_uuid = ? AND username = ?")) {
                     stmt.setString(1, uuid);
                     stmt.setString(2, username);
-                    stmt.executeUpdate();
+                    ResultSet rs = stmt.executeQuery();
+                    
+                    if (!rs.next()) {
+                        // Only insert if the combination doesn't exist
+                        try (PreparedStatement insertStmt = conn.prepareStatement(
+                                "INSERT INTO usernames (mojang_uuid, username) VALUES (?, ?)")) {
+                            insertStmt.setString(1, uuid);
+                            insertStmt.setString(2, username);
+                            insertStmt.executeUpdate();
+                            plugin.getLogger().info("Stored new username " + username + " for UUID " + uuid);
+                        }
+                    }
                 }
-                
+
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();

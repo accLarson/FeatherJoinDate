@@ -46,9 +46,11 @@ public class MessageFormatterUtility {
 
         String joinDate = TimeFormatterUtility.formatDate(joinDateMillis);
         String joinTime = TimeFormatterUtility.formatTime(joinDateMillis);
+        String joinDateAgo = TimeFormatterUtility.formatRelativeTime(joinDateMillis);
 
         String lastLoginDate = TimeFormatterUtility.formatDate(lastLoginMillis);
         String lastLoginTime = TimeFormatterUtility.formatTime(lastLoginMillis);
+        String lastLoginAgo = TimeFormatterUtility.formatRelativeTime(lastLoginMillis);
 
         boolean hasPastUsernames = !previousUsernames.isEmpty();
         String usernames = String.join(", ", new ArrayList<>(new HashSet<>(previousUsernames)));
@@ -59,6 +61,8 @@ public class MessageFormatterUtility {
         messageParams.put("jointime", joinTime);
         messageParams.put("lastlogindate", lastLoginDate);
         messageParams.put("lastlogintime", lastLoginTime);
+        messageParams.put("joindateago", joinDateAgo);
+        messageParams.put("lastloginago", lastLoginAgo);
         messageParams.put("usernames", usernames);
 
         if (offlinePlayer.isOnline() && lastLoginMillis > 0) {

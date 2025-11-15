@@ -46,7 +46,7 @@ public class JoinManager {
            conn.setAutoCommit(false);
            
             try {
-                // Use REPLACE INTO to handle both insert and update cases
+                // Update last_login for existing player or insert new player
                 try (PreparedStatement stmt = conn.prepareStatement(
                         "INSERT INTO joins (mojang_uuid, last_login) VALUES (?, CURRENT_TIMESTAMP) " +
                         "ON DUPLICATE KEY UPDATE last_login = CURRENT_TIMESTAMP")) {
@@ -54,23 +54,12 @@ public class JoinManager {
                 stmt.executeUpdate();
                 }
                 
-                // Check if this UUID + username combination already exists
+                // Insert username, unique constraint will prevent duplicates
                 try (PreparedStatement stmt = conn.prepareStatement(
-                        "SELECT 1 FROM usernames WHERE mojang_uuid = ? AND username = ?")) {
+                        "INSERT IGNORE INTO usernames (mojang_uuid, username) VALUES (?, ?)")) {
                     stmt.setString(1, uuid);
                     stmt.setString(2, username);
-                    ResultSet rs = stmt.executeQuery();
-                    
-                    if (!rs.next()) {
-                        // Only insert if the combination doesn't exist
-                        try (PreparedStatement insertStmt = conn.prepareStatement(
-                                "INSERT INTO usernames (mojang_uuid, username) VALUES (?, ?)")) {
-                            insertStmt.setString(1, uuid);
-                            insertStmt.setString(2, username);
-                            insertStmt.executeUpdate();
-                            plugin.getLogger().info("Stored new username " + username + " for UUID " + uuid);
-                        }
-                    }
+                    stmt.executeUpdate();
                 }
 
                 conn.commit();
